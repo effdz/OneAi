@@ -6,6 +6,7 @@ import 'package:oneai/providers/chat_provider.dart';
 import 'package:provider/provider.dart';
 import 'package:oneai/utils/responsive.dart';
 import 'package:oneai/utils/platform_adaptive.dart';
+import 'package:oneai/theme/app_theme.dart';
 
 class ChatScreen extends StatefulWidget {
   final ChatbotModel chatbot;
@@ -94,6 +95,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     final isApple = PlatformAdaptive.isApplePlatform();
     final padding = Responsive.responsivePadding(context);
     final isDesktop = Responsive.isDesktop(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     // Platform-specific app bar
     final appBar = PlatformAdaptive.appBar(
@@ -135,6 +137,17 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                     return _buildEmptyChatView();
                   }
 
+                  // Auto-scroll to bottom when new messages arrive
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    if (_scrollController.hasClients) {
+                      _scrollController.animateTo(
+                        _scrollController.position.maxScrollExtent,
+                        duration: const Duration(milliseconds: 300),
+                        curve: Curves.easeOut,
+                      );
+                    }
+                  });
+
                   return Center(
                     child: Container(
                       constraints: BoxConstraints(
@@ -173,26 +186,56 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildEmptyChatView() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(
-            PlatformAdaptive.isApplePlatform()
-                ? _getAppleIcon(widget.chatbot.id)
-                : widget.chatbot.icon,
-            size: 64,
-            color: widget.chatbot.color.withOpacity(0.5),
-          ),
-          const SizedBox(height: 16),
-          Text(
-            'Start chatting with ${widget.chatbot.name}',
-            style: TextStyle(
-              fontSize: 16,
-              color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+          Container(
+            width: 120,
+            height: 120,
+            decoration: BoxDecoration(
+              color: widget.chatbot.color.withOpacity(0.1),
+              borderRadius: BorderRadius.circular(60),
+              boxShadow: [
+                BoxShadow(
+                  color: widget.chatbot.color.withOpacity(isDark ? 0.2 : 0.1),
+                  blurRadius: 15,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+            ),
+            child: Icon(
+              PlatformAdaptive.isApplePlatform()
+                  ? _getAppleIcon(widget.chatbot.id)
+                  : widget.chatbot.icon,
+              size: 60,
+              color: widget.chatbot.color,
             ),
           ),
           const SizedBox(height: 24),
+          Text(
+            'Start chatting with ${widget.chatbot.name}',
+            style: TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+              color: Theme.of(context).textTheme.bodyLarge?.color,
+            ),
+          ),
+          const SizedBox(height: 12),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              'Ask questions, get creative ideas, or just have a conversation',
+              style: TextStyle(
+                fontSize: 16,
+                color: Theme.of(context).textTheme.bodyMedium?.color?.withOpacity(0.7),
+              ),
+              textAlign: TextAlign.center,
+            ),
+          ),
+          const SizedBox(height: 32),
           PlatformAdaptive.button(
             text: 'Start Conversation',
             onPressed: () {
@@ -209,6 +252,8 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
   }
 
   Widget _buildChatInput(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Consumer<ChatProvider>(
       builder: (context, chatProvider, child) {
         final isLoading = chatProvider.isLoading;
@@ -216,13 +261,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         return Container(
           padding: const EdgeInsets.symmetric(
             horizontal: 16,
-            vertical: 8,
+            vertical: 12,
           ),
           decoration: BoxDecoration(
             color: Theme.of(context).cardColor,
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
                 blurRadius: 5,
                 offset: const Offset(0, -1),
               ),
@@ -231,30 +276,41 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
           child: Row(
             children: [
               Expanded(
-                child: PlatformAdaptive.textField(
-                  controller: _messageController,
-                  placeholder: 'Type a message...',
-                  focusNode: _focusNode,
-                  onEditingComplete: _sendMessage,
-                  enabled: !isLoading,
-                  decoration: InputDecoration(
-                    hintText: 'Type a message...',
-                    border: OutlineInputBorder(
-                      borderRadius: BorderRadius.circular(24),
-                      borderSide: BorderSide.none,
-                    ),
-                    filled: true,
-                    fillColor: Theme.of(context).brightness == Brightness.dark
-                        ? Colors.grey[800]
-                        : Colors.grey[200],
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 12,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.grey[800] : Colors.grey[200],
+                    borderRadius: BorderRadius.circular(24),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.05),
+                        blurRadius: 2,
+                        offset: const Offset(0, 1),
+                      ),
+                    ],
+                  ),
+                  child: PlatformAdaptive.textField(
+                    controller: _messageController,
+                    placeholder: 'Type a message...',
+                    focusNode: _focusNode,
+                    onEditingComplete: _sendMessage,
+                    enabled: !isLoading,
+                    decoration: InputDecoration(
+                      hintText: 'Type a message...',
+                      border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(24),
+                        borderSide: BorderSide.none,
+                      ),
+                      filled: true,
+                      fillColor: isDark ? Colors.grey[800] : Colors.grey[200],
+                      contentPadding: const EdgeInsets.symmetric(
+                        horizontal: 20,
+                        vertical: 14,
+                      ),
                     ),
                   ),
                 ),
               ),
-              const SizedBox(width: 8),
+              const SizedBox(width: 12),
               AnimatedBuilder(
                 animation: _sendButtonController,
                 builder: (context, child) {
@@ -269,6 +325,13 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                       decoration: BoxDecoration(
                         color: widget.chatbot.color,
                         shape: BoxShape.circle,
+                        boxShadow: [
+                          BoxShadow(
+                            color: widget.chatbot.color.withOpacity(0.3),
+                            blurRadius: 8,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
                       ),
                       child: IconButton(
                         icon: isLoading
@@ -279,7 +342,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
                               : Icons.send,
                           color: Colors.white,
                         ),
-                        onPressed: isLoading ? null : _sendMessage,
+                        onPressed: isLoading ? () {} : _sendMessage,
                       ),
                     ),
                   );
@@ -327,6 +390,11 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
         return CupertinoIcons.square_stack_3d_down_right;
       case 'mistral':
         return CupertinoIcons.wind;
+      case 'deepinfra-llama':
+        return CupertinoIcons.memories;
+      case 'openrouter-claude':
+      case 'openrouter-mixtral':
+        return CupertinoIcons.arrow_branch;
       default:
         return CupertinoIcons.chat_bubble_2;
     }
@@ -353,11 +421,11 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     final backgroundColor = isUser
         ? chatbotColor
-        : (Theme.of(context).brightness == Brightness.dark
-        ? Colors.grey[800]
-        : Colors.grey[200]);
+        : (isDark ? Colors.grey[800] : Colors.grey[200]);
     final textColor = isUser
         ? Colors.white
         : Theme.of(context).textTheme.bodyLarge?.color;
@@ -381,15 +449,7 @@ class _MessageBubble extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser && showAvatar) ...[
-            CircleAvatar(
-              backgroundColor: chatbotColor.withOpacity(0.2),
-              radius: 16,
-              child: Icon(
-                chatbotIcon,
-                size: 16,
-                color: chatbotColor,
-              ),
-            ),
+            _buildAvatar(context, isUser: false),
             const SizedBox(width: 8),
           ] else if (!isUser && !showAvatar) ...[
             const SizedBox(width: 40), // Space for avatar alignment
@@ -405,7 +465,7 @@ class _MessageBubble extends StatelessWidget {
                 borderRadius: borderRadius,
                 boxShadow: [
                   BoxShadow(
-                    color: Colors.black.withOpacity(0.05),
+                    color: Colors.black.withOpacity(isDark ? 0.2 : 0.05),
                     blurRadius: 3,
                     offset: const Offset(0, 1),
                   ),
@@ -422,21 +482,48 @@ class _MessageBubble extends StatelessWidget {
           ),
           if (isUser && showAvatar) ...[
             const SizedBox(width: 8),
-            CircleAvatar(
-              backgroundColor: Theme.of(context).colorScheme.primary.withOpacity(0.2),
-              radius: 16,
-              child: Icon(
-                PlatformAdaptive.isApplePlatform()
-                    ? CupertinoIcons.person
-                    : Icons.person,
-                size: 16,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-            ),
+            _buildAvatar(context, isUser: true),
           ] else if (isUser && !showAvatar) ...[
             const SizedBox(width: 40), // Space for avatar alignment
           ],
         ],
+      ),
+    );
+  }
+
+  Widget _buildAvatar(BuildContext context, {required bool isUser}) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Container(
+      width: 32,
+      height: 32,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: isUser
+            ? Theme.of(context).colorScheme.primary.withOpacity(0.2)
+            : chatbotColor.withOpacity(0.2),
+        boxShadow: [
+          BoxShadow(
+            color: (isUser
+                ? Theme.of(context).colorScheme.primary
+                : chatbotColor).withOpacity(isDark ? 0.3 : 0.2),
+            blurRadius: 4,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Center(
+        child: Icon(
+          isUser
+              ? (PlatformAdaptive.isApplePlatform()
+              ? CupertinoIcons.person
+              : Icons.person)
+              : chatbotIcon,
+          size: 16,
+          color: isUser
+              ? Theme.of(context).colorScheme.primary
+              : chatbotColor,
+        ),
       ),
     );
   }

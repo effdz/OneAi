@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:oneai/providers/auth_provider.dart';
 import 'package:oneai/screens/auth/register_screen.dart';
 import 'package:oneai/screens/home_screen.dart';
+import 'package:oneai/screens/debug_screen.dart';
 import 'package:oneai/utils/platform_adaptive.dart';
 import 'package:oneai/utils/responsive.dart';
 import 'package:oneai/theme/app_theme.dart';
@@ -37,6 +38,10 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       ),
     );
     _animationController.forward();
+
+    // Add test credentials for easier testing
+    _emailController.text = 'test@example.com';
+    _passwordController.text = 'password123';
   }
 
   @override
@@ -50,17 +55,36 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
   Future<void> _login() async {
     if (_formKey.currentState?.validate() ?? false) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      print('Login button pressed');
+      print('Email: ${_emailController.text.trim()}');
+      print('Password length: ${_passwordController.text.length}');
+
       final success = await authProvider.login(
         _emailController.text.trim(),
         _passwordController.text,
       );
 
+      print('Login result: $success');
+      print('Auth provider error: ${authProvider.error}');
+      print('Auth provider user: ${authProvider.user?.username}');
+
       if (success && mounted) {
+        print('Navigating to home screen');
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const HomeScreen()),
         );
+      } else {
+        print('Login failed, staying on login screen');
+        // Error will be shown automatically via Consumer
       }
     }
+  }
+
+  void _showDebugScreen() {
+    Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const DebugScreen()),
+    );
   }
 
   @override
@@ -71,6 +95,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
     final isDesktop = Responsive.isDesktop(context);
     final screenWidth = MediaQuery.of(context).size.width;
     final formWidth = isDesktop ? screenWidth * 0.4 : screenWidth * 0.85;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
       body: SafeArea(
@@ -82,15 +107,16 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
               child: Center(
                 child: Container(
                   width: formWidth,
-                  padding: const EdgeInsets.all(24),
+                  padding: const EdgeInsets.all(32),
                   decoration: BoxDecoration(
                     color: Theme.of(context).cardColor,
-                    borderRadius: BorderRadius.circular(20),
+                    borderRadius: BorderRadius.circular(24),
                     boxShadow: [
                       BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
+                        color: Colors.black.withOpacity(isDark ? 0.3 : 0.1),
                         blurRadius: 20,
                         offset: const Offset(0, 10),
+                        spreadRadius: 2,
                       ),
                     ],
                   ),
@@ -99,19 +125,34 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     children: [
                       // Logo
                       Container(
-                        width: 80,
-                        height: 80,
+                        width: 100,
+                        height: 100,
                         decoration: BoxDecoration(
-                          color: AppTheme.primaryColor.withOpacity(0.1),
+                          gradient: LinearGradient(
+                            colors: [
+                              AppTheme.primaryColor,
+                              AppTheme.secondaryColor,
+                            ],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppTheme.primaryColor.withOpacity(isDark ? 0.4 : 0.2),
+                              blurRadius: 15,
+                              offset: const Offset(0, 5),
+                              spreadRadius: 2,
+                            ),
+                          ],
                         ),
                         child: Icon(
                           isApple ? CupertinoIcons.chat_bubble_2 : Icons.chat,
-                          size: 40,
-                          color: AppTheme.primaryColor,
+                          size: 50,
+                          color: Colors.white,
                         ),
                       ),
-                      const SizedBox(height: 24),
+                      const SizedBox(height: 32),
 
                       // Title
                       Text(
@@ -120,6 +161,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                           color: Theme.of(context).textTheme.bodyLarge?.color,
+                          letterSpacing: -0.5,
                         ),
                       ),
                       const SizedBox(height: 8),
@@ -132,13 +174,34 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                       ),
                       const SizedBox(height: 32),
 
+                      // Debug button (only in debug mode)
+                      if (const bool.fromEnvironment('dart.vm.product') == false) ...[
+                        TextButton.icon(
+                          onPressed: _showDebugScreen,
+                          icon: const Icon(Icons.bug_report),
+                          label: const Text('Debug Info'),
+                          style: TextButton.styleFrom(
+                            backgroundColor: Colors.grey.withOpacity(0.1),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 16,
+                              vertical: 8,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+
                       // Error message
                       if (authProvider.error != null) ...[
                         Container(
                           padding: const EdgeInsets.all(16),
                           decoration: BoxDecoration(
                             color: Colors.red.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(10),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.red.withOpacity(0.3),
+                              width: 1,
+                            ),
                           ),
                           child: Row(
                             children: [
@@ -173,9 +236,17 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 hintText: 'Enter your email',
                                 prefixIcon: Icon(
                                   isApple ? CupertinoIcons.mail : Icons.email_outlined,
+                                  color: AppTheme.primaryColor,
                                 ),
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: AppTheme.primaryColor,
+                                    width: 2,
+                                  ),
                                 ),
                               ),
                               validator: (value) {
@@ -188,7 +259,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 20),
 
                             // Password field
                             TextFormField(
@@ -199,12 +270,14 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 hintText: 'Enter your password',
                                 prefixIcon: Icon(
                                   isApple ? CupertinoIcons.lock : Icons.lock_outline,
+                                  color: AppTheme.primaryColor,
                                 ),
                                 suffixIcon: IconButton(
                                   icon: Icon(
                                     _obscurePassword
                                         ? (isApple ? CupertinoIcons.eye : Icons.visibility_outlined)
                                         : (isApple ? CupertinoIcons.eye_slash : Icons.visibility_off_outlined),
+                                    color: AppTheme.neutralMedium,
                                   ),
                                   onPressed: () {
                                     setState(() {
@@ -215,6 +288,13 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 border: OutlineInputBorder(
                                   borderRadius: BorderRadius.circular(12),
                                 ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(12),
+                                  borderSide: BorderSide(
+                                    color: AppTheme.primaryColor,
+                                    width: 2,
+                                  ),
+                                ),
                               ),
                               validator: (value) {
                                 if (value == null || value.isEmpty) {
@@ -223,21 +303,43 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                 return null;
                               },
                             ),
-                            const SizedBox(height: 24),
+                            const SizedBox(height: 32),
 
                             // Login button
                             SizedBox(
                               width: double.infinity,
-                              height: 50,
-                              child: PlatformAdaptive.button(
-                                text: 'Sign In',
-                                onPressed: _login,
-                                isLoading: authProvider.isLoading,
-                                backgroundColor: AppTheme.primaryColor,
-                                textColor: Colors.white,
+                              height: 54,
+                              child: ElevatedButton(
+                                onPressed: authProvider.isLoading ? () {} : _login,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppTheme.primaryColor,
+                                  foregroundColor: Colors.white,
+                                  elevation: 2,
+                                  shadowColor: AppTheme.primaryColor.withOpacity(0.3),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(12),
+                                  ),
+                                ),
+                                child: authProvider.isLoading
+                                    ? SizedBox(
+                                  width: 24,
+                                  height: 24,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                                  ),
+                                )
+                                    : Text(
+                                  'Sign In',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
                               ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 24),
 
                             // Register link
                             Row(
@@ -255,7 +357,12 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                       MaterialPageRoute(builder: (_) => const RegisterScreen()),
                                     );
                                   },
-                                  child: const Text('Sign Up'),
+                                  child: Text(
+                                    'Sign Up',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
                                 ),
                               ],
                             ),

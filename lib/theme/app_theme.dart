@@ -4,23 +4,23 @@ import 'dart:io' show Platform;
 import 'package:flutter/foundation.dart' show kIsWeb;
 
 class AppTheme {
-  // Primary brand colors
-  static const Color primaryColor = Color(0xFF6750A4);
-  static const Color secondaryColor = Color(0xFF9C27B0);
-  static const Color accentColor = Color(0xFFE91E63);
+  // Primary brand colors - Refreshed color palette
+  static const Color primaryColor = Color(0xFF6366F1); // Indigo
+  static const Color secondaryColor = Color(0xFF8B5CF6); // Violet
+  static const Color accentColor = Color(0xFFEC4899); // Pink
 
   // Neutral colors
-  static const Color neutralDark = Color(0xFF1D1B20);
-  static const Color neutralMedium = Color(0xFF49454F);
-  static const Color neutralLight = Color(0xFFF4EFF4);
+  static const Color neutralDark = Color(0xFF1F2937);
+  static const Color neutralMedium = Color(0xFF6B7280);
+  static const Color neutralLight = Color(0xFFF9FAFB);
 
   // Semantic colors
-  static const Color successColor = Color(0xFF4CAF50);
-  static const Color errorColor = Color(0xFFB00020);
-  static const Color warningColor = Color(0xFFFFC107);
-  static const Color infoColor = Color(0xFF2196F3);
+  static const Color successColor = Color(0xFF10B981); // Emerald
+  static const Color errorColor = Color(0xFFEF4444); // Red
+  static const Color warningColor = Color(0xFFF59E0B); // Amber
+  static const Color infoColor = Color(0xFF3B82F6); // Blue
 
-  // Chatbot colors
+  // Chatbot colors - More vibrant
   static const Color openaiColor = Color(0xFF10A37F);
   static const Color geminiColor = Color(0xFF4285F4);
   static const Color huggingfaceColor = Color(0xFFFFD21E);
@@ -29,8 +29,8 @@ class AppTheme {
   static const Color openrouterColor = Color(0xFF00A3E1);
 
   // Font families
-  static const String primaryFontFamily = 'Roboto';
-  static const String secondaryFontFamily = 'Poppins';
+  static const String primaryFontFamily = 'Poppins';
+  static const String secondaryFontFamily = 'Inter';
 
   // Light theme
   static ThemeData lightTheme = ThemeData(
@@ -69,6 +69,7 @@ class AppTheme {
     cardTheme: CardTheme(
       color: Colors.white,
       elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.05),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
@@ -92,6 +93,14 @@ class AppTheme {
         horizontal: 16,
         vertical: 16,
       ),
+      hintStyle: TextStyle(
+        color: neutralMedium.withOpacity(0.7),
+        fontFamily: primaryFontFamily,
+      ),
+      labelStyle: TextStyle(
+        color: neutralMedium,
+        fontFamily: primaryFontFamily,
+      ),
     ),
     textTheme: TextTheme(
       displayLarge: TextStyle(
@@ -99,18 +108,21 @@ class AppTheme {
         fontSize: 32,
         fontWeight: FontWeight.bold,
         color: neutralDark,
+        letterSpacing: -0.5,
       ),
       displayMedium: TextStyle(
         fontFamily: primaryFontFamily,
         fontSize: 28,
         fontWeight: FontWeight.bold,
         color: neutralDark,
+        letterSpacing: -0.5,
       ),
       displaySmall: TextStyle(
         fontFamily: primaryFontFamily,
         fontSize: 24,
         fontWeight: FontWeight.bold,
         color: neutralDark,
+        letterSpacing: -0.25,
       ),
       headlineMedium: TextStyle(
         fontFamily: primaryFontFamily,
@@ -140,9 +152,10 @@ class AppTheme {
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 2,
+        shadowColor: primaryColor.withOpacity(0.3),
         padding: const EdgeInsets.symmetric(
           horizontal: 24,
-          vertical: 12,
+          vertical: 14,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -151,6 +164,42 @@ class AppTheme {
           fontFamily: primaryFontFamily,
           fontWeight: FontWeight.w600,
           fontSize: 16,
+          letterSpacing: 0.5,
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: primaryColor,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 10,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: TextStyle(
+          fontFamily: primaryFontFamily,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primaryColor,
+        side: BorderSide(color: primaryColor),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 12,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        textStyle: TextStyle(
+          fontFamily: primaryFontFamily,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
         ),
       ),
     ),
@@ -162,6 +211,22 @@ class AppTheme {
       color: neutralMedium.withOpacity(0.2),
       thickness: 1,
       space: 32,
+    ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: Colors.white,
+      selectedItemColor: primaryColor,
+      unselectedItemColor: neutralMedium,
+      selectedLabelStyle: TextStyle(
+        fontFamily: primaryFontFamily,
+        fontWeight: FontWeight.w600,
+        fontSize: 12,
+      ),
+      unselectedLabelStyle: TextStyle(
+        fontFamily: primaryFontFamily,
+        fontSize: 12,
+      ),
+      type: BottomNavigationBarType.fixed,
+      elevation: 8,
     ),
   );
 
@@ -176,8 +241,8 @@ class AppTheme {
       secondary: secondaryColor,
       tertiary: accentColor,
       error: errorColor,
-      background: neutralDark,
-      surface: Color(0xFF2D2D2D),
+      background: Color(0xFF121212),
+      surface: Color(0xFF1E1E1E),
       onPrimary: Colors.white,
       onSecondary: Colors.white,
       onTertiary: Colors.white,
@@ -185,9 +250,9 @@ class AppTheme {
       onBackground: neutralLight,
       onSurface: neutralLight,
     ),
-    scaffoldBackgroundColor: neutralDark,
+    scaffoldBackgroundColor: Color(0xFF121212),
     appBarTheme: AppBarTheme(
-      backgroundColor: Color(0xFF2D2D2D),
+      backgroundColor: Color(0xFF1E1E1E),
       foregroundColor: neutralLight,
       elevation: 0,
       centerTitle: true,
@@ -200,15 +265,16 @@ class AppTheme {
       iconTheme: IconThemeData(color: neutralLight),
     ),
     cardTheme: CardTheme(
-      color: Color(0xFF2D2D2D),
+      color: Color(0xFF1E1E1E),
       elevation: 2,
+      shadowColor: Colors.black.withOpacity(0.3),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(16),
       ),
     ),
     inputDecorationTheme: InputDecorationTheme(
       filled: true,
-      fillColor: Color(0xFF3D3D3D),
+      fillColor: Color(0xFF2A2A2A),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide(color: neutralMedium.withOpacity(0.3)),
@@ -225,6 +291,14 @@ class AppTheme {
         horizontal: 16,
         vertical: 16,
       ),
+      hintStyle: TextStyle(
+        color: neutralMedium.withOpacity(0.7),
+        fontFamily: primaryFontFamily,
+      ),
+      labelStyle: TextStyle(
+        color: neutralMedium,
+        fontFamily: primaryFontFamily,
+      ),
     ),
     textTheme: TextTheme(
       displayLarge: TextStyle(
@@ -232,18 +306,21 @@ class AppTheme {
         fontSize: 32,
         fontWeight: FontWeight.bold,
         color: neutralLight,
+        letterSpacing: -0.5,
       ),
       displayMedium: TextStyle(
         fontFamily: primaryFontFamily,
         fontSize: 28,
         fontWeight: FontWeight.bold,
         color: neutralLight,
+        letterSpacing: -0.5,
       ),
       displaySmall: TextStyle(
         fontFamily: primaryFontFamily,
         fontSize: 24,
         fontWeight: FontWeight.bold,
         color: neutralLight,
+        letterSpacing: -0.25,
       ),
       headlineMedium: TextStyle(
         fontFamily: primaryFontFamily,
@@ -273,9 +350,10 @@ class AppTheme {
         backgroundColor: primaryColor,
         foregroundColor: Colors.white,
         elevation: 2,
+        shadowColor: Colors.black.withOpacity(0.3),
         padding: const EdgeInsets.symmetric(
           horizontal: 24,
-          vertical: 12,
+          vertical: 14,
         ),
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(12),
@@ -284,6 +362,42 @@ class AppTheme {
           fontFamily: primaryFontFamily,
           fontWeight: FontWeight.w600,
           fontSize: 16,
+          letterSpacing: 0.5,
+        ),
+      ),
+    ),
+    textButtonTheme: TextButtonThemeData(
+      style: TextButton.styleFrom(
+        foregroundColor: primaryColor,
+        padding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 10,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(8),
+        ),
+        textStyle: TextStyle(
+          fontFamily: primaryFontFamily,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
+        ),
+      ),
+    ),
+    outlinedButtonTheme: OutlinedButtonThemeData(
+      style: OutlinedButton.styleFrom(
+        foregroundColor: primaryColor,
+        side: BorderSide(color: primaryColor),
+        padding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 12,
+        ),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        textStyle: TextStyle(
+          fontFamily: primaryFontFamily,
+          fontWeight: FontWeight.w600,
+          fontSize: 14,
         ),
       ),
     ),
@@ -295,6 +409,22 @@ class AppTheme {
       color: neutralMedium.withOpacity(0.2),
       thickness: 1,
       space: 32,
+    ),
+    bottomNavigationBarTheme: BottomNavigationBarThemeData(
+      backgroundColor: Color(0xFF1E1E1E),
+      selectedItemColor: primaryColor,
+      unselectedItemColor: neutralMedium,
+      selectedLabelStyle: TextStyle(
+        fontFamily: primaryFontFamily,
+        fontWeight: FontWeight.w600,
+        fontSize: 12,
+      ),
+      unselectedLabelStyle: TextStyle(
+        fontFamily: primaryFontFamily,
+        fontSize: 12,
+      ),
+      type: BottomNavigationBarType.fixed,
+      elevation: 8,
     ),
   );
 
@@ -401,7 +531,7 @@ class AppTheme {
   }) {
     if ((kIsWeb && !isApplePlatform()) || (!kIsWeb && !isApplePlatform())) {
       return ElevatedButton(
-        onPressed: isLoading ? null : onPressed,
+        onPressed: isLoading ? () {} : onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: backgroundColor ?? primaryColor,
           foregroundColor: textColor ?? Colors.white,
@@ -429,7 +559,7 @@ class AppTheme {
       );
     } else {
       return CupertinoButton(
-        onPressed: isLoading ? null : onPressed,
+        onPressed: isLoading ? () {} : onPressed,
         color: backgroundColor ?? primaryColor,
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         child: isLoading

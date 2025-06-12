@@ -21,16 +21,29 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print("Checking if user is logged in...");
       final isLoggedIn = await AuthService.isLoggedIn();
+      print("Is logged in: $isLoggedIn");
+
       if (isLoggedIn) {
         _user = await AuthService.getUser();
+        print("User loaded: ${_user?.username}");
         if (_user == null) {
           // If we have a token but no user, try to get the user profile
-          _user = await AuthService.getUserProfile();
+          try {
+            _user = await AuthService.getUserProfile();
+            print("User profile loaded: ${_user?.username}");
+          } catch (e) {
+            print("Error getting user profile: $e");
+            // If there's an error getting the user, consider them logged out
+            await AuthService.logout();
+            _user = null;
+          }
         }
       }
       _error = null;
     } catch (e) {
+      print("Error initializing user: $e");
       _error = e.toString();
       // If there's an error getting the user, consider them logged out
       await AuthService.logout();
@@ -47,10 +60,15 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print("Attempting login for: $email");
       _user = await AuthService.login(email, password);
+      print("Login successful for: ${_user?.username}");
+      _error = null;
       return true;
     } catch (e) {
+      print("Login error: $e");
       _error = e.toString();
+      _user = null;
       return false;
     } finally {
       _isLoading = false;
@@ -64,10 +82,15 @@ class AuthProvider extends ChangeNotifier {
     notifyListeners();
 
     try {
+      print("Attempting registration for: $email");
       _user = await AuthService.register(username, email, password);
+      print("Registration successful for: ${_user?.username}");
+      _error = null;
       return true;
     } catch (e) {
+      print("Registration error: $e");
       _error = e.toString();
+      _user = null;
       return false;
     } finally {
       _isLoading = false;
@@ -79,12 +102,18 @@ class AuthProvider extends ChangeNotifier {
     _isLoading = true;
     notifyListeners();
 
-    await AuthService.logout();
-    _user = null;
-    _error = null;
-
-    _isLoading = false;
-    notifyListeners();
+    try {
+      await AuthService.logout();
+      _user = null;
+      _error = null;
+      print("Logout successful");
+    } catch (e) {
+      print("Logout error: $e");
+      _error = e.toString();
+    } finally {
+      _isLoading = false;
+      notifyListeners();
+    }
   }
 
   Future<void> refreshUserProfile() async {
@@ -97,6 +126,7 @@ class AuthProvider extends ChangeNotifier {
       _user = await AuthService.getUserProfile();
       _error = null;
     } catch (e) {
+      print("Error refreshing user profile: $e");
       _error = e.toString();
     } finally {
       _isLoading = false;

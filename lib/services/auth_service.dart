@@ -1,65 +1,109 @@
 import 'dart:convert';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
 import 'package:oneai/models/user_model.dart';
+import 'package:oneai/services/database_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class AuthService {
-  // Untuk demo, kita gunakan URL dummy. Dalam aplikasi nyata, ganti dengan URL API Anda
-  static const String _baseUrl = 'https://api.example.com/api';
   static const _storage = FlutterSecureStorage();
   static const String _tokenKey = 'auth_token';
-  static const String _userKey = 'current_user';
+  static const String _userIdKey = 'current_user_id';
+  static final DatabaseService _dbService = DatabaseService();
 
   // Mendapatkan token dari secure storage
   static Future<String?> getToken() async {
-    return await _storage.read(key: _tokenKey);
+    try {
+      return await _storage.read(key: _tokenKey);
+    } catch (e) {
+      print('Error getting token: $e');
+      return null;
+    }
   }
 
   // Menyimpan token ke secure storage
   static Future<void> saveToken(String token) async {
-    await _storage.write(key: _tokenKey, value: token);
-  }
-
-  // Menyimpan user ke shared preferences
-  static Future<void> saveUser(UserModel user) async {
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_userKey, jsonEncode(user.toJson()));
-  }
-
-  // Mendapatkan user dari shared preferences
-  static Future<UserModel?> getUser() async {
-    final prefs = await SharedPreferences.getInstance();
-    final userJson = prefs.getString(_userKey);
-    if (userJson != null) {
-      return UserModel.fromJson(jsonDecode(userJson));
+    try {
+      await _storage.write(key: _tokenKey, value: token);
+      print('Token saved successfully');
+    } catch (e) {
+      print('Error saving token: $e');
     }
-    return null;
+  }
+
+  // Menyimpan user ID ke shared preferences
+  static Future<void> saveUserId(String userId) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_userIdKey, userId);
+      print('User ID saved: $userId');
+    } catch (e) {
+      print('Error saving user ID: $e');
+    }
+  }
+
+  // Mendapatkan user ID dari shared preferences
+  static Future<String?> getUserId() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final userId = prefs.getString(_userIdKey);
+      print('Retrieved user ID: $userId');
+      return userId;
+    } catch (e) {
+      print('Error getting user ID: $e');
+      return null;
+    }
+  }
+
+  // Mendapatkan user dari database
+  static Future<UserModel?> getUser() async {
+    try {
+      final userId = await getUserId();
+      print('Getting user for ID: $userId');
+      if (userId != null) {
+        final user = await _dbService.getUserById(userId);
+        print('User found: ${user?.username}');
+        return user;
+      }
+      print('No user ID found');
+      return null;
+    } catch (e) {
+      print('Error getting user: $e');
+      return null;
+    }
   }
 
   // Hapus token dan user (logout)
   static Future<void> logout() async {
-    await _storage.delete(key: _tokenKey);
-    final prefs = await SharedPreferences.getInstance();
-    await prefs.remove(_userKey);
+    try {
+      await _storage.delete(key: _tokenKey);
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_userIdKey);
+      print('Logout completed');
+    } catch (e) {
+      print('Error during logout: $e');
+    }
   }
 
   // Cek apakah user sudah login
   static Future<bool> isLoggedIn() async {
-    final token = await getToken();
-    return token != null && token.isNotEmpty;
+    try {
+      final token = await getToken();
+      final userId = await getUserId();
+      final isLoggedIn = token != null && token.isNotEmpty && userId != null;
+      print('Is logged in check: $isLoggedIn (token: ${token != null}, userId: ${userId != null})');
+      return isLoggedIn;
+    } catch (e) {
+      print('Error checking login status: $e');
+      return false;
+    }
   }
 
   // Login
   static Future<UserModel> login(String email, String password) async {
-    // Untuk demo, kita akan membuat user dummy
-    // Dalam aplikasi nyata, ini akan memanggil API login
-
     try {
-      // Simulasi delay jaringan
-      await Future.delayed(const Duration(seconds: 1));
+      print('Starting login process for: $email');
 
-      // Validasi email dan password sederhana
+      // Validasi input
       if (email.isEmpty || !email.contains('@')) {
         throw Exception('Email tidak valid');
       }
@@ -68,20 +112,27 @@ class AuthService {
         throw Exception('Password harus minimal 6 karakter');
       }
 
-      // Untuk demo, kita terima semua login dengan email dan password yang valid
-      final user = UserModel(
-        id: 'user-${DateTime.now().millisecondsSinceEpoch}',
-        username: email.split('@')[0],
-        email: email,
-        lastLogin: DateTime.now(),
-      );
+      // Login menggunakan database
+      print('Attempting database login...');
+      final user = await _dbService.loginUser(email, password);
 
-      // Simpan token dummy
-      await saveToken('dummy-token-${DateTime.now().millisecondsSinceEpoch}');
-      await saveUser(user);
+      if (user == null) {
+        throw Exception('Email atau password salah');
+      }
 
+      print('Database login successful for: ${user.username}');
+
+      // Generate token (simple token untuk demo)
+      final token = 'token_${user.id}_${DateTime.now().millisecondsSinceEpoch}';
+
+      // Simpan token dan user ID
+      await saveToken(token);
+      await saveUserId(user.id);
+
+      print('Login completed successfully');
       return user;
     } catch (e) {
+      print('Login failed: $e');
       throw Exception('Login gagal: $e');
     }
   }
@@ -89,14 +140,10 @@ class AuthService {
   // Register
   static Future<UserModel> register(
       String username, String email, String password) async {
-    // Untuk demo, kita akan membuat user dummy
-    // Dalam aplikasi nyata, ini akan memanggil API register
-
     try {
-      // Simulasi delay jaringan
-      await Future.delayed(const Duration(seconds: 1));
+      print('Starting registration process for: $email');
 
-      // Validasi input sederhana
+      // Validasi input
       if (username.isEmpty || username.length < 3) {
         throw Exception('Username harus minimal 3 karakter');
       }
@@ -109,20 +156,26 @@ class AuthService {
         throw Exception('Password harus minimal 6 karakter');
       }
 
-      // Untuk demo, kita terima semua registrasi dengan input yang valid
-      final user = UserModel(
-        id: 'user-${DateTime.now().millisecondsSinceEpoch}',
-        username: username,
-        email: email,
-        lastLogin: DateTime.now(),
-      );
+      // Cek apakah email sudah terdaftar
+      print('Checking if email exists...');
+      final emailExists = await _dbService.emailExists(email);
+      if (emailExists) {
+        throw Exception('Email sudah terdaftar');
+      }
 
-      // Simpan token dummy
-      await saveToken('dummy-token-${DateTime.now().millisecondsSinceEpoch}');
-      await saveUser(user);
+      // Register user ke database
+      print('Registering user to database...');
+      final success = await _dbService.registerUser(username, email, password);
 
-      return user;
+      if (!success) {
+        throw Exception('Gagal mendaftarkan user');
+      }
+
+      print('Registration successful, attempting auto-login...');
+      // Login otomatis setelah register
+      return await login(email, password);
     } catch (e) {
+      print('Registration failed: $e');
       throw Exception('Registrasi gagal: $e');
     }
   }
@@ -138,9 +191,6 @@ class AuthService {
 
   // Get user profile
   static Future<UserModel> getUserProfile() async {
-    // Untuk demo, kita akan mengambil user dari shared preferences
-    // Dalam aplikasi nyata, ini akan memanggil API untuk mendapatkan profil user
-
     try {
       final user = await getUser();
       if (user == null) {
@@ -148,7 +198,43 @@ class AuthService {
       }
       return user;
     } catch (e) {
+      print('Error getting user profile: $e');
       throw Exception('Gagal mendapatkan profil user: $e');
+    }
+  }
+
+  // Update user profile
+  static Future<void> updateUserProfile(UserModel user) async {
+    try {
+      // Implementasi update user profile jika diperlukan
+      // Untuk sekarang, kita simpan ke shared preferences
+      await saveUserId(user.id);
+    } catch (e) {
+      print('Error updating user profile: $e');
+      throw Exception('Gagal update profil: $e');
+    }
+  }
+
+  // Change password
+  static Future<bool> changePassword(String currentPassword, String newPassword) async {
+    try {
+      final user = await getUser();
+      if (user == null) {
+        throw Exception('User tidak ditemukan');
+      }
+
+      // Verify current password by trying to login
+      final loginUser = await _dbService.loginUser(user.email, currentPassword);
+      if (loginUser == null) {
+        throw Exception('Password saat ini salah');
+      }
+
+      // For now, we'll return true as password change would require
+      // additional database methods
+      return true;
+    } catch (e) {
+      print('Error changing password: $e');
+      throw Exception('Gagal mengubah password: $e');
     }
   }
 }

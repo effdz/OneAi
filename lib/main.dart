@@ -10,6 +10,7 @@ import 'package:oneai/services/api/mistral_api.dart';
 import 'package:oneai/services/api/deepinfra_api.dart';
 import 'package:oneai/services/api/openrouter_api.dart';
 import 'package:oneai/services/api_key_service.dart';
+import 'package:oneai/services/database_service.dart';
 import 'package:provider/provider.dart';
 import 'package:oneai/theme/app_theme.dart';
 import 'package:flutter/services.dart';
@@ -63,8 +64,22 @@ void main() async {
     print("No .env file found. Using SharedPreferences for API keys.");
   }
 
+  // Initialize database
+  try {
+    final dbService = DatabaseService();
+    await dbService.database; // This will create the database if it doesn't exist
+    print("Database initialized successfully");
+  } catch (e) {
+    print("Error initializing database: $e");
+  }
+
   // Load API keys
-  await ApiKeyService.loadAllApiKeys();
+  try {
+    await ApiKeyService.loadAllApiKeys();
+    print("API keys loaded successfully");
+  } catch (e) {
+    print("Error loading API keys: $e");
+  }
 
   runApp(const MyApp());
 }

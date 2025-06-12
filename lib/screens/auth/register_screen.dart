@@ -39,6 +39,12 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
       ),
     );
     _animationController.forward();
+
+    // Add test data for easier testing
+    _usernameController.text = 'testuser';
+    _emailController.text = 'test@example.com';
+    _passwordController.text = 'password123';
+    _confirmPasswordController.text = 'password123';
   }
 
   @override
@@ -54,17 +60,31 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
   Future<void> _register() async {
     if (_formKey.currentState?.validate() ?? false) {
       final authProvider = Provider.of<AuthProvider>(context, listen: false);
+
+      print('Register button pressed');
+      print('Username: ${_usernameController.text.trim()}');
+      print('Email: ${_emailController.text.trim()}');
+      print('Password length: ${_passwordController.text.length}');
+
       final success = await authProvider.register(
         _usernameController.text.trim(),
         _emailController.text.trim(),
         _passwordController.text,
       );
 
+      print('Registration result: $success');
+      print('Auth provider error: ${authProvider.error}');
+      print('Auth provider user: ${authProvider.user?.username}');
+
       if (success && mounted) {
+        print('Navigating to home screen');
         Navigator.of(context).pushAndRemoveUntil(
           MaterialPageRoute(builder: (_) => const HomeScreen()),
               (route) => false,
         );
+      } else {
+        print('Registration failed, staying on register screen');
+        // Error will be shown automatically via Consumer
       }
     }
   }
@@ -308,7 +328,7 @@ class _RegisterScreenState extends State<RegisterScreen> with SingleTickerProvid
                               height: 50,
                               child: PlatformAdaptive.button(
                                 text: 'Create Account',
-                                onPressed: _register,
+                                onPressed: authProvider.isLoading ? () {} : _register,
                                 isLoading: authProvider.isLoading,
                                 backgroundColor: AppTheme.secondaryColor,
                                 textColor: Colors.white,
