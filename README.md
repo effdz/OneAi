@@ -4,13 +4,13 @@ A mobile AI chatbot application that integrates multiple AI providers into a sin
 
 ## Features
 
-- 🤖 Multiple AI Chatbots (OpenAI, Gemini, Mistral, DeepInfra, OpenRouter, Hugging Face)
-- 🔐 User Authentication (Login/Register)
-- 🌙 Dark/Light Theme Support
-- 📱 Responsive Design (Mobile, Tablet, Desktop)
-- 🔒 Secure API Key Storage
-- 💬 Chat History Management
-- 🎨 Platform Adaptive UI (Material Design & Cupertino)
+- Multiple AI Chatbots (OpenAI, Gemini, Mistral, DeepInfra, OpenRouter, Hugging Face)
+- User Authentication (Login/Register)
+- Dark/Light Theme Support
+- Responsive Design (Mobile, Tablet, Desktop)
+- Secure API Key Storage
+- Chat History Management
+- Platform Adaptive UI (Material Design & Cupertino)
 
 ## Setup Instructions
 
@@ -41,7 +41,7 @@ flutter pub get
    # ... add other keys
    \`\`\`
 
-⚠️ **IMPORTANT**: Never commit the `.env` file to version control. It contains sensitive API keys.
+**IMPORTANT**: Never commit the `.env` file to version control. It contains sensitive API keys.
 
 ### 4. Run the Application
 
@@ -88,11 +88,11 @@ flutter run
 
 ## Security Best Practices
 
-- ✅ API keys are stored securely using Flutter Secure Storage
-- ✅ Environment variables are not committed to version control
-- ✅ User authentication is implemented
-- ✅ Input validation is performed on all forms
-- ✅ Error handling prevents sensitive information leakage
+- API keys are stored securely using Flutter Secure Storage
+- Environment variables are not committed to version control
+- User authentication is implemented
+- Input validation is performed on all forms
+- Error handling prevents sensitive information leakage
 
 ## Project Structure
 
