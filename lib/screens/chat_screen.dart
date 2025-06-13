@@ -58,6 +58,7 @@ class _ChatScreenState extends State<ChatScreen> with TickerProviderStateMixin {
     }
   }
 
+
   @override
   void dispose() {
     _messageController.removeListener(_onTextChanged);
